@@ -301,7 +301,7 @@ def create_table_of_contents_github():
                 md_text = file.read()
 
                 header_list = get_headers(md_text, params["header_priority"])
-                table_of_contents_lines = create_table_of_contents(header_list)
+                table_of_contents_lines = create_table_of_contents(header_list[1:])
 
                 if table_of_contents_lines is None:
                     print(
