@@ -1,9 +1,9 @@
 # python3.6
 
-import os
-from os import path
-import re
 import argparse
+import os
+import re
+from os import path
 from urllib.parse import quote
 
 HOME = os.getenv("HOME", "")
