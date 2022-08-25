@@ -1,21 +1,13 @@
 # encoding=utf-8
 # python3.6
 
-import sqlite3
 import os
 from os import path
 import re
 import argparse
 from urllib.parse import quote
-import datetime as dt
-from dateutil.relativedelta import relativedelta
 
 HOME = os.getenv("HOME", "")
-
-bear_db = path.join(
-    HOME,
-    "Library/Group Containers/9K33E3U3T4.net.shinyfrog.bear/Application Data/database.sqlite",
-)
 
 parser = argparse.ArgumentParser(
     description="Markdown Table of Contents Generator for Bear or Github",
@@ -70,65 +62,6 @@ parser.set_defaults(write=True)
 
 args = parser.parse_args()
 params = vars(args)
-
-if params["type"] == "bear":
-    conn = sqlite3.connect(bear_db)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-
-def get_notes_from_bear():
-    """
-    Returns all Bear Notes specified which have specified title or UUID.
-    """
-    # Get all Unarchived notes from Bear
-    read_query = "SELECT * FROM `ZSFNOTE` WHERE `ZTRASHED` LIKE '0' AND `ZARCHIVED` LIKE '0' AND `ZENCRYPTED` LIKE 0"
-    notes = cursor.execute(read_query)
-
-    def match_title_uuid_tag(note):
-        note_tags = get_tags_in_note(note["ZTEXT"])
-        for query in params["name"]:
-            if (
-                query in note_tags
-                or query == note["ZTITLE"]
-                or query == note["ZUNIQUEIDENTIFIER"]
-            ):
-                return True
-        return False
-
-    return list(filter(lambda note: match_title_uuid_tag(note), notes))
-
-
-def get_tags_in_note(md_text):
-    """
-    Returns a set of tags that exist in the note using the RegEx. Tags are elements that are preceeded by '#'.
-    """
-
-    # First, ignore all code blocks since our regex is unable to handle it
-    text_no_code = []
-
-    lines_iter = iter(md_text.splitlines())
-    in_code_block = False
-    for line in lines_iter:
-        if line.startswith("```"):
-            in_code_block = not in_code_block
-
-        if not in_code_block:
-            text_no_code.append(line)
-
-    text_no_code = "\n".join(text_no_code)
-
-    # Match all tags
-    # Positive Lookbehind 1: Start of character
-    # Positive Lookbehind 2: newline character or ' ' (needs to be separate cause Python only takes fixed-length lookbehinds)
-    # Group 1: Starts with '#' and ends with '#' as long as middle is not '#' or a newline character (#tags#)
-    # Group 2: Starts with '#' and is not succeeded by a '#', ' ', or newline character (#tags)
-    # We need two groups because '#tags#' can have spaces where '#tags' cannot
-    tag_matches = re.findall(
-        r"((?<=^)|(?<=\n|\r| ))(#[^#\r\n]+#|#[^#\r\n ]+)", text_no_code, re.MULTILINE
-    )
-    tag_matches = map(lambda match: match[1], tag_matches)  # Second Capture Group
-    return set(tag_matches)
 
 
 def has_table_of_contents(md_text):
@@ -239,49 +172,6 @@ def create_table_of_contents(header_priority_pairs, note_uuid=None):
     return bullet_list
 
 
-def create_table_of_contents_bear():
-    """
-    Read Bear Notes and returns list of (Original Text, Table of Contents List) and list of note UUIDs.
-    """
-    notes = get_notes_from_bear()
-    md_text_toc_pairs = []
-    uuids = []
-
-    for row in notes:
-        title = row["ZTITLE"]
-        md_text = row["ZTEXT"].rstrip()
-        uuid = row["ZUNIQUEIDENTIFIER"]
-        # creation_date = row['ZCREATIONDATE']
-        # modified = row['ZMODIFICATIONDATE']
-
-        if has_table_of_contents(md_text):
-            print(
-                "[WARNING]: '{}' already has a Table of Contents, Ignoring...".format(
-                    title
-                )
-            )
-            continue
-
-        header_list = get_headers(md_text, params["header_priority"])
-        table_of_contents_lines = create_table_of_contents(header_list, uuid)
-
-        if table_of_contents_lines is None:
-            print(
-                "[WARNING]: '{}' has no headers to create a Table of Contents, Ignoring...".format(
-                    title
-                )
-            )
-            continue
-
-        if params["write"]:
-            print("Creating a Table of Contents for '{}'".format(title))
-
-        md_text_toc_pairs.append((md_text, table_of_contents_lines))
-        uuids.append(uuid)
-
-    return md_text_toc_pairs, uuids
-
-
 def create_table_of_contents_github():
     """
     Read from file and returns list of (Original Text, Table of Contents List).
@@ -349,19 +239,11 @@ def find_toc_end(md_text_lines):
     return len(md_text_lines)
 
 
-def convert_bear_timestamp(datetime=dt.datetime.now()):
-    """For some weird reason Bear's timestamps are 31 years behind, so this returns 'datetime' - 31 years as a Unix Timestamp."""
-    return (datetime - relativedelta(years=31)).timestamp()
-
-
 def main():
     md_text_toc_pairs = None
     identifiers = None  # Either Bear Note UUIDs or File Paths
 
-    if params["type"] == "bear":
-        md_text_toc_pairs, identifiers = create_table_of_contents_bear()
-    elif params["type"] == "github":
-        md_text_toc_pairs, identifiers = create_table_of_contents_github()
+    md_text_toc_pairs, identifiers = create_table_of_contents_github()
 
     for i, (md_text, toc_lines) in enumerate(md_text_toc_pairs):
         if params["write"]:
@@ -384,23 +266,9 @@ def main():
             )
             updated_md_text = "\n".join(updated_text_list) + "\n"
 
-            if params["type"] == "bear":
-                # Update Note with Table of Contents
-                update_query = "UPDATE `ZSFNOTE` SET `ZSUBTITLE`=?, `ZTEXT`=?, `ZMODIFICATIONDATE`=? WHERE `ZUNIQUEIDENTIFIER`=?"
-                cursor.execute(
-                    update_query,
-                    (
-                        subtitle_text,
-                        updated_md_text,
-                        convert_bear_timestamp(),
-                        identifiers[i],
-                    ),
-                )
-                conn.commit()
-            elif params["type"] == "github":
-                # Update File
-                with open(identifiers[i], "w") as file:
-                    file.write(updated_md_text)
+            # Update File
+            with open(identifiers[i], "w") as file:
+                file.write(updated_md_text)
 
         else:
             print("\n".join(toc_lines) + "\n")
@@ -415,39 +283,3 @@ if __name__ == "__main__":
             "[WARNING]: There still might be syncing issues with iCloud, for a precautionary measure, edit the note again."
         )
         print("To see your changes, please restart Bear!")
-        conn.close()
-
-
-# DEPRECATED
-# def create_header_list(header_priority_pairs):
-#     # Base Case
-#     if (len(header_priority_pairs) == 0):
-#         return []
-#
-#     header_list = []
-#     current_header = None
-#     current_priority = None
-#     current_subheaders = []
-#
-#     # Go through each header and check if the header's priority is greater than the next's
-#     for i in range(len(header_priority_pairs) - 1):
-#         header, priority = header_priority_pairs[i]
-#         next_header, next_priority = header_priority_pairs[i + 1]
-#
-#         if current_header is None:
-#             current_header = header
-#             current_priority = priority
-#
-#         # Append Sub-header
-#         current_subheaders.append(header_priority_pairs[i + 1])
-#
-#         # If we see a same ranked header (H1 and H1) or reaches the end
-#         if current_priority == next_priority or i + 1 == len(header_priority_pairs) - 1:
-#             header_list.append((current_header, create_header_list(current_subheaders)))
-#
-#             # Reset Current Header
-#             current_header = None
-#             current_priority = None
-#             current_subheaders = []
-#
-#     return header_list
