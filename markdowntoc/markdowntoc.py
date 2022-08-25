@@ -382,7 +382,7 @@ def main():
             subtitle_text = re.sub(
                 r"\[([^\[\]]+)\]\([^\(\)]+\)", r"\1", " ".join(updated_text_list[1:])
             )
-            updated_md_text = "\n".join(updated_text_list)
+            updated_md_text = "\n".join(updated_text_list) + "\n"
 
             if params["type"] == "bear":
                 # Update Note with Table of Contents
