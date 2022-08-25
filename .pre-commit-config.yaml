@@ -1,5 +1,9 @@
 repos:
--   repo: https://github.com/qiaouchicago/markdown-toc
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+  - repo: https://github.com/qiaouchicago/markdown-toc
     rev: 0.1.0
     hooks:
       - id: markdown-toc
