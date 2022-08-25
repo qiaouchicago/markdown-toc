@@ -301,7 +301,7 @@ def create_table_of_contents_github():
                 md_text = file.read()
 
                 header_list = get_headers(md_text, params["header_priority"])
-                table_of_contents_lines = create_table_of_contents(header_list)
+                table_of_contents_lines = create_table_of_contents(header_list[1:])
 
                 if table_of_contents_lines is None:
                     print(
@@ -382,7 +382,7 @@ def main():
             subtitle_text = re.sub(
                 r"\[([^\[\]]+)\]\([^\(\)]+\)", r"\1", " ".join(updated_text_list[1:])
             )
-            updated_md_text = "\n".join(updated_text_list)
+            updated_md_text = "\n".join(updated_text_list) + "\n"
 
             if params["type"] == "bear":
                 # Update Note with Table of Contents
