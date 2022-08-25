@@ -5,7 +5,6 @@
 
 # Table of Contents
 
-- [Overview](#Overview)
 - [Installation](#Installation)
   - [PyPi (Preferred)](#PyPi-(Preferred))
   - [Manually](#Manually)

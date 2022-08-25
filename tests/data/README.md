@@ -8,7 +8,6 @@ GDC internship project for generating data model source code.
 
 # Table of Contents
 
-- [The Data Commons Model Source Generator Project (Plaster)](#The-Data-Commons-Model-Source-Generator-Project-(Plaster))
 - [Purpose](#Purpose)
 - [Goal](#Goal)
 - [Data Commons Models](#Data-Commons-Models)
