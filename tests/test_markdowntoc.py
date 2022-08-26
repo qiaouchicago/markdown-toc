@@ -1,3 +1,5 @@
+import filecmp
+
 import pkg_resources
 import pytest
 
@@ -10,6 +12,7 @@ from markdowntoc import (
     get_headers,
     get_parser,
     sequentialize_header_priorities,
+    write_results,
 )
 from tests.data import processed
 
@@ -126,3 +129,12 @@ def test_create_table_of_contents_github():
 
     assert res[0] == processed.data
     assert res[1] == params["name"]
+
+
+def test_write_results(tmp_path):
+    md_text_toc_pairs = processed.data
+    identifiers = [tmp_path / "result.md"]
+    write_results(md_text_toc_pairs, identifiers)
+
+    after = pkg_resources.resource_filename("tests", "data/after.md")
+    assert filecmp.cmp(identifiers[0], after)

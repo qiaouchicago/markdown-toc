@@ -197,16 +197,9 @@ def find_toc_end(md_text_lines):
     return len(md_text_lines)
 
 
-def main():
-    parser = get_parser()
-
-    args = parser.parse_args()
-    params = vars(args)
-
-    md_text_toc_pairs, identifiers = create_table_of_contents_github(params)
-
+def write_results(md_text_toc_pairs, identifiers, to_file=True):
     for i, (md_text, toc_lines) in enumerate(md_text_toc_pairs):
-        if params["write"]:
+        if to_file:
             # Inject Table of Contents (Title, \n, Table of Contents, \n, Content)
             text_list = md_text.splitlines()
             toc_start = find_toc_start(text_list)
@@ -227,6 +220,16 @@ def main():
 
         else:
             print("\n".join(toc_lines) + "\n")
+
+
+def main():
+    parser = get_parser()
+
+    args = parser.parse_args()
+    params = vars(args)
+
+    md_text_toc_pairs, identifiers = create_table_of_contents_github(params)
+    write_results(md_text_toc_pairs, identifiers, params["write"])
 
 
 if __name__ == "__main__":
