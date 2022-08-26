@@ -8,64 +8,57 @@ from urllib.parse import quote
 
 HOME = os.getenv("HOME", "")
 
-parser = argparse.ArgumentParser(
-    description="Markdown Table of Contents Generator for Bear or Github",
-    add_help=False,
-)
 
-parser.add_argument("--help", action="help", help="Show this help message and exit")
+def get_parser():
 
-parser.add_argument(
-    "name",
-    nargs="+",
-    type=str,
-    help="Bear Note UUID, Bear Note Title, Bear Note Tag, or Markdown file",
-)
+    parser = argparse.ArgumentParser(
+        description="Markdown Table of Contents Generator for Bear or Github",
+        add_help=False,
+    )
 
-parser.add_argument(
-    "-h",
-    "--header-priority",
-    type=int,
-    dest="header_priority",
-    default=3,
-    help="(Default: 3) Maximum Header Priority/Strength to consider as Table of Contents",
-)
+    parser.add_argument("--help", action="help", help="Show this help message and exit")
 
-parser.add_argument(
-    "-t",
-    "--type",
-    type=str.lower,
-    dest="type",
-    choices=["github", "bear"],
-    default="github",
-    help="(Default: github) Github Anchors or Bear Anchors",
-)
+    parser.add_argument(
+        "name",
+        nargs="+",
+        type=str,
+        help="Bear Note UUID, Bear Note Title, Bear Note Tag, or Markdown file",
+    )
 
-parser.add_argument(
-    "--no-write",
-    dest="write",
-    action="store_false",
-    help="Whether or not write Table of Contents to file or note automatically or output to the console.\
-                          Add this flag to TURN OFF the automatic writing.",
-)
+    parser.add_argument(
+        "-h",
+        "--header-priority",
+        type=int,
+        dest="header_priority",
+        default=3,
+        help="(Default: 3) Maximum Header Priority/Strength to consider as Table of Contents",
+    )
 
-parser.add_argument(
-    "-toc",
-    "--table-of-contents-style",
-    dest="toc",
-    default="# Table of Contents",
-    help="(Default: '# Table of Contents') Table of Contents Style",
-)
+    parser.add_argument(
+        "-t",
+        "--type",
+        type=str.lower,
+        dest="type",
+        choices=["github", "bear"],
+        default="github",
+        help="(Default: github) Github Anchors or Bear Anchors",
+    )
 
-parser.set_defaults(write=True)
+    parser.add_argument(
+        "--no-write",
+        dest="write",
+        action="store_false",
+        help="Whether or not write Table of Contents to file or note automatically or output to the console.\
+                              Add this flag to TURN OFF the automatic writing.",
+    )
 
-args = parser.parse_args()
-params = vars(args)
+    parser.set_defaults(write=True)
+    return parser
 
 
 def has_table_of_contents(md_text):
     """
-    Return True or False whether or not a Table of Contents header already exists in the given Markdown text.
+    Return True or False whether a Table of Contents header already exists in the given Markdown text.
     """
     return (
         re.search(r"^#+\sTable\sof\sContents", md_text, re.IGNORECASE | re.MULTILINE)
@@ -110,13 +103,13 @@ def get_headers(md_text, max_priority):
 
 def sequentialize_header_priorities(header_priority_pairs):
     """
-    In a case where a H3 or H4 succeeds a H1, due to the nature of the Table of Contents generator\
-    which adds the number of tabs corresponding to the header priority/strength, this will sequentialize\
-    the headers such that all headers have a priority of atmost 1 more than their preceeding header.
+    In a case where an H3 or H4 succeeds an H1, due to the nature of the Table of Contents generator
+    which adds the number of tabs corresponding to the header priority/strength, this will sequentialize
+    the headers such that all headers have a priority of atmost 1 more than their preceding header.
 
     [('Header 1', 1), ('Header 3', 3), ('Header 4', 4)] -> [('Header 1', 1), ('Header 2', 2), ('Header 3', 3)]
     """
-    # Go through each header and and if we see a pair where the difference in priority is > 1, make them sequential
+    # Go through each header and if we see a pair where the difference in priority is > 1, make them sequential
     # Ex: (H1, H3) -> (H1, H2)
     for i in range(len(header_priority_pairs) - 1):
         header, priority = header_priority_pairs[i]
@@ -140,38 +133,29 @@ def create_bear_header_anchor(header_title, note_uuid):
 
 def create_github_header_anchor(header_title):
     """
-    Returns a Github Markdown anchor to the header.
+    Returns GitHub Markdown anchor to the header.
     """
     return "[{}](#{})".format(header_title, header_title.strip().replace(" ", "-"))
 
 
-def create_table_of_contents(header_priority_pairs, note_uuid=None):
+def create_table_of_contents(header_priority_pairs):
     """
     Returns a list of strings containing the Table of Contents.
     """
     if len(header_priority_pairs) == 0:
         return None
 
-    bullet_list = [params["toc"]]
-    bullet_list.append("")
+    bullet_list = ["# Table of Contents", ""]
 
     highest_priority = min(header_priority_pairs, key=lambda pair: pair[1])[1]
     for header, priority in header_priority_pairs:
-        md_anchor = (
-            create_bear_header_anchor(header, note_uuid)
-            if params["type"] == "bear"
-            else create_github_header_anchor(header)
-        )
+        md_anchor = create_github_header_anchor(header)
         bullet_list.append("  " * (priority - highest_priority) + "- " + md_anchor)
-
-    # Specifically for Bear add separator
-    if params["type"] == "bear":
-        bullet_list.append("---")
 
     return bullet_list
 
 
-def create_table_of_contents_github():
+def create_table_of_contents_github(params):
     """
     Read from file and returns list of (Original Text, Table of Contents List).
     """
@@ -239,10 +223,12 @@ def find_toc_end(md_text_lines):
 
 
 def main():
-    md_text_toc_pairs = None
-    identifiers = None  # Either Bear Note UUIDs or File Paths
+    parser = get_parser()
 
-    md_text_toc_pairs, identifiers = create_table_of_contents_github()
+    args = parser.parse_args()
+    params = vars(args)
+
+    md_text_toc_pairs, identifiers = create_table_of_contents_github(params)
 
     for i, (md_text, toc_lines) in enumerate(md_text_toc_pairs):
         if params["write"]:
@@ -258,11 +244,6 @@ def main():
                 "",
                 *text_list[toc_end:],
             ]
-            # Regex extracts anchor text from ancho
-            # NOTE: There are edge cases with code blocks, bold, strikethroughs, etc...
-            subtitle_text = re.sub(
-                r"\[([^\[\]]+)\]\([^\(\)]+\)", r"\1", " ".join(updated_text_list[1:])
-            )
             updated_md_text = "\n".join(updated_text_list) + "\n"
 
             # Update File
@@ -275,10 +256,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    if params["type"] == "bear" and params["write"]:
-        print("==================== [DONE] ====================")
-        print(
-            "[WARNING]: There still might be syncing issues with iCloud, for a precautionary measure, edit the note again."
-        )
-        print("To see your changes, please restart Bear!")
