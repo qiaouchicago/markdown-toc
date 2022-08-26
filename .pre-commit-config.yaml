@@ -1,4 +1,3 @@
-exclude: tests/data/before.md
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0 # last version to support py36
@@ -7,6 +6,7 @@ repos:
       - id: check-toml
       - id: check-yaml
       - id: end-of-file-fixer
+        exclude: .svg$
       - id: fix-encoding-pragma
         args: [ --remove ]
       - id: pretty-format-json
@@ -44,3 +44,4 @@ repos:
     rev: 0.1.0
     hooks:
       - id: markdown-toc
+        exclude: tests/data/before.md

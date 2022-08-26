@@ -5,13 +5,14 @@
 
 # Table of Contents
 
-- [Installation](#Installation)
-  - [PyPi (Preferred)](#PyPi-(Preferred))
-  - [Manually](#Manually)
-- [Usage](#Usage)
-  - [Flags](#Flags)
-  - [With Bear](#With-Bear)
-  - [With Markdown Files](#With-Markdown-Files)
+  - [Installation](#Installation)
+    - [PyPi (Preferred)](#PyPi-(Preferred))
+    - [Manually](#Manually)
+  - [Usage](#Usage)
+    - [Flags](#Flags)
+    - [With Bear](#With-Bear)
+    - [With Markdown Files](#With-Markdown-Files)
+- [Repo Visualizer](#Repo-Visualizer)
 
 <!-- tocstop -->
 
@@ -84,3 +85,7 @@ $ markdown-toc -h <default: 3> -t github [--no-write] README.md
 ```sh
 $ markdown-toc -h <default: 3> -t github [--no-write] README.md Folder/README2.md
 ```
+
+# Repo Visualizer
+
+![Visualization of this repo](images/diagram.svg)
