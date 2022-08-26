@@ -107,16 +107,6 @@ def sequentialize_header_priorities(header_priority_pairs):
     return header_priority_pairs
 
 
-def create_bear_header_anchor(header_title, note_uuid):
-    """
-    Returns a markdown anchor of a Bear x-callback-url to the header.
-    """
-    header_title_url_safe = quote(header_title)
-    return "[{}](bear://x-callback-url/open-note?id={}&header={})".format(
-        header_title, note_uuid, header_title_url_safe
-    )
-
-
 def create_github_header_anchor(header_title):
     """
     Returns GitHub Markdown anchor to the header.
