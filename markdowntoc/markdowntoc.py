@@ -1,12 +1,8 @@
 # python3.6
 
 import argparse
-import os
-import re
 from os import path
 from urllib.parse import quote
-
-HOME = os.getenv("HOME", "")
 
 
 def get_parser():
@@ -47,23 +43,13 @@ def get_parser():
     parser.add_argument(
         "--no-write",
         dest="write",
+        default=True,
         action="store_false",
         help="Whether or not write Table of Contents to file or note automatically or output to the console.\
                               Add this flag to TURN OFF the automatic writing.",
     )
 
-    parser.set_defaults(write=True)
     return parser
-
-
-def has_table_of_contents(md_text):
-    """
-    Return True or False whether a Table of Contents header already exists in the given Markdown text.
-    """
-    return (
-        re.search(r"^#+\sTable\sof\sContents", md_text, re.IGNORECASE | re.MULTILINE)
-        is not None
-    )
 
 
 def get_headers(md_text, max_priority):
