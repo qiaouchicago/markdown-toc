@@ -24,7 +24,7 @@ setup(
     install_requires=[],
     extras_require={
         "dev": [
-            "pytest~=7.1",
+            "pytest~=6.2",
         ]
     },
     scripts=["bin/markdown-toc"],
