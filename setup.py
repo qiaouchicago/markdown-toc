@@ -18,6 +18,7 @@ setup(
     keywords="markdown md github bear table of contents toc",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
+    include_package_data=True,
     install_requires=[],
     extras_require={
         "dev": [
