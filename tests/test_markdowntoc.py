@@ -4,6 +4,8 @@ import pytest
 from markdowntoc import (
     create_github_header_anchor,
     create_table_of_contents,
+    find_toc_end,
+    find_toc_start,
     get_headers,
     sequentialize_header_priorities,
 )
@@ -14,6 +16,11 @@ def get_data():
     file = pkg_resources.resource_filename("tests", "data/before.md")
     with open(file) as fp:
         return fp.read()
+
+
+@pytest.fixture
+def get_md_lines(get_data):
+    return get_data.splitlines()
 
 
 def test_sequentialize_header_priorities():
@@ -94,3 +101,13 @@ def test_create_table_of_contents():
         "- [Associated Projects](#Associated-Projects)",
         "- [Repo Visualizer](#Repo-Visualizer)",
     ]
+
+
+def test_find_toc_start(get_md_lines):
+    line_number = find_toc_start(get_md_lines)
+    assert line_number == 7
+
+
+def test_find_toc_end(get_md_lines):
+    line_number = find_toc_end(get_md_lines)
+    assert line_number == 7
