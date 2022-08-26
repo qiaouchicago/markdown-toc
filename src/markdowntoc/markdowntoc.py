@@ -52,7 +52,7 @@ def get_parser():
     return parser
 
 
-def get_headers(md_text, max_priority):
+def get_headers(md_text, max_priority=3):
     """
     Retrieves a list of header, priority pairs in a given Markdown text.
 
