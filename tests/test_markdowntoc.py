@@ -4,11 +4,14 @@ import pytest
 from markdowntoc import (
     create_github_header_anchor,
     create_table_of_contents,
+    create_table_of_contents_github,
     find_toc_end,
     find_toc_start,
     get_headers,
+    get_parser,
     sequentialize_header_priorities,
 )
+from tests.data import processed
 
 
 @pytest.fixture
@@ -111,3 +114,15 @@ def test_find_toc_start(get_md_lines):
 def test_find_toc_end(get_md_lines):
     line_number = find_toc_end(get_md_lines)
     assert line_number == 7
+
+
+def test_create_table_of_contents_github():
+    parser = get_parser()
+    args = parser.parse_args()
+    params = vars(args)
+    params["name"] = [pkg_resources.resource_filename("tests", "data/before.md")]
+
+    res = create_table_of_contents_github(params)
+
+    assert res[0] == processed.data
+    assert res[1] == params["name"]

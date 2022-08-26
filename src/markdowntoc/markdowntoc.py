@@ -2,7 +2,6 @@
 
 import argparse
 from os import path
-from urllib.parse import quote
 
 
 def get_parser():
