@@ -2,7 +2,6 @@
 
 import argparse
 from os import path
-from urllib.parse import quote
 
 
 def get_parser():
@@ -52,7 +51,7 @@ def get_parser():
     return parser
 
 
-def get_headers(md_text, max_priority):
+def get_headers(md_text, max_priority=3):
     """
     Retrieves a list of header, priority pairs in a given Markdown text.
 
@@ -105,16 +104,6 @@ def sequentialize_header_priorities(header_priority_pairs):
             header_priority_pairs[i + 1] = (next_header, priority + 1)
 
     return header_priority_pairs
-
-
-def create_bear_header_anchor(header_title, note_uuid):
-    """
-    Returns a markdown anchor of a Bear x-callback-url to the header.
-    """
-    header_title_url_safe = quote(header_title)
-    return "[{}](bear://x-callback-url/open-note?id={}&header={})".format(
-        header_title, note_uuid, header_title_url_safe
-    )
 
 
 def create_github_header_anchor(header_title):
@@ -208,16 +197,9 @@ def find_toc_end(md_text_lines):
     return len(md_text_lines)
 
 
-def main():
-    parser = get_parser()
-
-    args = parser.parse_args()
-    params = vars(args)
-
-    md_text_toc_pairs, identifiers = create_table_of_contents_github(params)
-
+def write_results(md_text_toc_pairs, identifiers, to_file=True):
     for i, (md_text, toc_lines) in enumerate(md_text_toc_pairs):
-        if params["write"]:
+        if to_file:
             # Inject Table of Contents (Title, \n, Table of Contents, \n, Content)
             text_list = md_text.splitlines()
             toc_start = find_toc_start(text_list)
@@ -238,6 +220,16 @@ def main():
 
         else:
             print("\n".join(toc_lines) + "\n")
+
+
+def main():
+    parser = get_parser()
+
+    args = parser.parse_args()
+    params = vars(args)
+
+    md_text_toc_pairs, identifiers = create_table_of_contents_github(params)
+    write_results(md_text_toc_pairs, identifiers, params["write"])
 
 
 if __name__ == "__main__":
